@@ -12,7 +12,7 @@ object DefaultSemantics {
     *   a default set of common external procedure calls for all languages.
     */
   def apply(): FullNameSemantics = {
-    val list = operatorFlows ++ cFlows ++ javaFlows
+    val list = operatorFlows ++ cFlows ++ javaFlows ++ goFlows
     FullNameSemantics.fromList(list)
   }
 
@@ -142,6 +142,159 @@ object DefaultSemantics {
     F("org.apache.http.HttpResponse.setReasonPhrase:void(java.lang.String)", List((1, 0), (1, 1), (0, -1))),
     F("org.apache.http.HttpResponse.getEntity:org.apache.http.HttpEntity()", List((0, -1))),
     F("org.apache.http.HttpResponse.setEntity:void(org.apache.http.HttpEntity)", List((1, 0), (1, 1), (1, 0)))
+  )
+
+  /** Semantic summaries for common external Go stdlib calls.
+    *
+    * Go method full names in Joern follow the pattern:
+    *   - Package-level functions: "package/path.FuncName" (e.g., "fmt.Sprintf")
+    *   - Struct methods: "package/path.TypeName.MethodName" (e.g., "net/http.Request.FormValue")
+    *
+    * Index 0 = receiver (for struct methods), positive = arg position, -1 = return value.
+    */
+  def goFlows: List[FlowSemantic] = List(
+    // === fmt package: string formatting ===
+    PTF("fmt.Sprintf"),
+    PTF("fmt.Sprint"),
+    PTF("fmt.Sprintln"),
+    F("fmt.Fprintf", List((1, 1), (2, 1), (2, -1))),
+    PTF("fmt.Printf"),
+    PTF("fmt.Println"),
+    PTF("fmt.Print"),
+    F("fmt.Fprint", List((1, 1), (2, 1), (2, -1))),
+    F("fmt.Fprintln", List((1, 1), (2, 1), (2, -1))),
+    F("fmt.Sscanf", List((1, -1), (1, 3))),
+    F("fmt.Sscan", List((1, -1), (1, 2))),
+    F("fmt.Errorf", List((1, -1))),
+    // === net/http package: HTTP request/response ===
+    F("net/http.Request.FormValue", List((0, -1), (1, -1))),
+    F("net/http.Request.PostFormValue", List((0, -1), (1, -1))),
+    F("net/http.Request.Header.Get", List((0, -1), (1, -1))),
+    F("net/http.Request.URL.Query", List((0, -1))),
+    F("net/http.Request.Cookie", List((0, -1), (1, -1))),
+    F("net/http.Request.Cookies", List((0, -1))),
+    F("net/http.Request.Referer", List((0, -1))),
+    F("net/http.Request.UserAgent", List((0, -1))),
+    F("net/http.Request.Body", List((0, -1))),
+    F("net/http.ResponseWriter.Write", List((0, 0), (1, 0), (1, -1))),
+    F("net/http.ResponseWriter.WriteHeader", List((0, 0), (1, 0))),
+    F("net/http.ResponseWriter.Header", List((0, -1))),
+    // === net/url package: URL parsing ===
+    F("net/url.URL.Query", List((0, -1))),
+    F("net/url.URL.String", List((0, -1))),
+    F("net/url.Values.Get", List((0, -1), (1, -1))),
+    F("net/url.Values.Set", List((1, 0), (2, 0))),
+    F("net/url.Values.Add", List((1, 0), (2, 0))),
+    F("net/url.Values.Encode", List((0, -1))),
+    F("net/url.Parse", List((1, -1))),
+    F("net/url.QueryEscape", List((1, -1))),
+    F("net/url.QueryUnescape", List((1, -1))),
+    F("net/url.PathEscape", List((1, -1))),
+    F("net/url.PathUnescape", List((1, -1))),
+    // === database/sql: SQL injection vectors ===
+    F("database/sql.DB.Query", List((1, -1), (2, -1))),
+    F("database/sql.DB.QueryRow", List((1, -1), (2, -1))),
+    F("database/sql.DB.Exec", List((1, -1), (2, -1))),
+    F("database/sql.DB.QueryContext", List((2, -1), (3, -1))),
+    F("database/sql.DB.ExecContext", List((2, -1), (3, -1))),
+    F("database/sql.DB.Prepare", List((1, -1))),
+    F("database/sql.Tx.Query", List((1, -1), (2, -1))),
+    F("database/sql.Tx.QueryRow", List((1, -1), (2, -1))),
+    F("database/sql.Tx.Exec", List((1, -1), (2, -1))),
+    F("database/sql.Stmt.Query", List((1, -1))),
+    F("database/sql.Stmt.QueryRow", List((1, -1))),
+    F("database/sql.Stmt.Exec", List((1, -1))),
+    F("database/sql.Row.Scan", List((0, 1))),
+    F("database/sql.Rows.Scan", List((0, 1))),
+    // === os/exec: command injection vectors (variadic) ===
+    PTF("os/exec.Command"),
+    PTF("os/exec.CommandContext"),
+    F("os/exec.Cmd.Output", List((0, -1))),
+    F("os/exec.Cmd.CombinedOutput", List((0, -1))),
+    F("os/exec.Cmd.Run", List((0, -1))),
+    F("os/exec.Cmd.Start", List((0, -1))),
+    // === os package: file system operations ===
+    F("os.Open", List((1, -1))),
+    F("os.Create", List((1, -1))),
+    F("os.OpenFile", List((1, -1))),
+    F("os.ReadFile", List((1, -1))),
+    F("os.WriteFile", List((1, 1), (2, 1))),
+    F("os.Getenv", List((1, -1))),
+    F("os.File.Read", List((0, 1), (0, -1))),
+    F("os.File.Write", List((1, 0), (1, -1))),
+    F("os.File.WriteString", List((1, 0), (1, -1))),
+    // === io and io/ioutil: I/O operations ===
+    F("io.ReadAll", List((1, -1))),
+    F("io/ioutil.ReadAll", List((1, -1))),
+    F("io/ioutil.ReadFile", List((1, -1))),
+    F("io/ioutil.WriteFile", List((1, 1), (2, 1))),
+    F("io.Copy", List((2, 1), (2, -1))),
+    F("io.WriteString", List((2, 1), (2, -1))),
+    // === html/template and text/template: XSS-relevant ===
+    F("html/template.HTMLEscapeString", List((1, -1))),
+    F("html/template.JSEscapeString", List((1, -1))),
+    F("html/template.URLQueryEscaper", List((1, -1))),
+    F("html/template.Template.Execute", List((1, 1), (2, 1))),
+    F("html/template.Template.ExecuteTemplate", List((1, 1), (3, 1))),
+    F("text/template.Template.Execute", List((1, 1), (2, 1))),
+    // === encoding/json: serialization ===
+    F("encoding/json.Marshal", List((1, -1))),
+    F("encoding/json.Unmarshal", List((1, 2), (1, -1))),
+    F("encoding/json.NewEncoder", List((1, -1))),
+    F("encoding/json.NewDecoder", List((1, -1))),
+    F("encoding/json.Encoder.Encode", List((1, 0), (1, -1))),
+    F("encoding/json.Decoder.Decode", List((0, 1))),
+    // === strings package: string operations ===
+    PTF("strings.Join"),
+    PTF("strings.Replace"),
+    PTF("strings.ReplaceAll"),
+    PTF("strings.ToLower"),
+    PTF("strings.ToUpper"),
+    PTF("strings.TrimSpace"),
+    PTF("strings.Trim"),
+    PTF("strings.TrimLeft"),
+    PTF("strings.TrimRight"),
+    PTF("strings.TrimPrefix"),
+    PTF("strings.TrimSuffix"),
+    PTF("strings.Split"),
+    PTF("strings.SplitN"),
+    F("strings.Contains", List((1, -1))),
+    F("strings.NewReader", List((1, -1))),
+    F("strings.Builder.WriteString", List((1, 0), (1, -1))),
+    F("strings.Builder.String", List((0, -1))),
+    // === strconv: type conversions ===
+    F("strconv.Atoi", List((1, -1))),
+    F("strconv.Itoa", List((1, -1))),
+    PTF("strconv.FormatInt"),
+    PTF("strconv.FormatFloat"),
+    F("strconv.ParseInt", List((1, -1))),
+    F("strconv.ParseFloat", List((1, -1))),
+    // === path/filepath: path manipulation ===
+    PTF("path/filepath.Join"),
+    F("path/filepath.Base", List((1, -1))),
+    F("path/filepath.Dir", List((1, -1))),
+    F("path/filepath.Clean", List((1, -1))),
+    F("path/filepath.Abs", List((1, -1))),
+    // === regexp: regex operations ===
+    F("regexp.Compile", List((1, -1))),
+    F("regexp.MustCompile", List((1, -1))),
+    F("regexp.Regexp.FindString", List((0, -1), (1, -1))),
+    F("regexp.Regexp.FindStringSubmatch", List((0, -1), (1, -1))),
+    F("regexp.Regexp.ReplaceAllString", List((0, -1), (1, -1), (2, -1))),
+    // === bytes package ===
+    F("bytes.NewBuffer", List((1, -1))),
+    F("bytes.NewBufferString", List((1, -1))),
+    F("bytes.Buffer.String", List((0, -1))),
+    F("bytes.Buffer.Bytes", List((0, -1))),
+    F("bytes.Buffer.Write", List((1, 0), (1, -1))),
+    F("bytes.Buffer.WriteString", List((1, 0), (1, -1))),
+    // === crypto/encoding: taint preservation ===
+    F("crypto/sha256.Sum256", List((1, -1))),
+    F("crypto/md5.Sum", List((1, -1))),
+    F("encoding/base64.StdEncoding.EncodeToString", List((1, -1))),
+    F("encoding/base64.StdEncoding.DecodeString", List((1, -1))),
+    F("encoding/hex.EncodeToString", List((1, -1))),
+    F("encoding/hex.DecodeString", List((1, -1)))
   )
 
   /** @return

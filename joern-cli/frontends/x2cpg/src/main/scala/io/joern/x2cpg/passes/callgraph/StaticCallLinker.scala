@@ -4,20 +4,16 @@ import io.joern.x2cpg.utils.LinkingUtil
 import io.shiftleft.codepropertygraph.generated.Cpg
 import io.shiftleft.codepropertygraph.generated.nodes.*
 import io.shiftleft.codepropertygraph.generated.{DispatchTypes, EdgeTypes}
-import io.shiftleft.passes.ForkJoinParallelCpgPass
+import io.shiftleft.passes.CpgPass
 import io.shiftleft.semanticcpg.language.*
 import org.slf4j.{Logger, LoggerFactory}
 
-class StaticCallLinker(cpg: Cpg) extends ForkJoinParallelCpgPass[Seq[Call]](cpg) with LinkingUtil {
+class StaticCallLinker(cpg: Cpg) extends CpgPass(cpg) with LinkingUtil {
 
   private val logger: Logger = LoggerFactory.getLogger(classOf[StaticCallLinker])
 
-  override def generateParts(): Array[Seq[Call]] = {
-    cpg.call.toList.grouped(MAX_BATCH_SIZE).toArray
-  }
-
-  override def runOnPart(builder: DiffGraphBuilder, calls: Seq[Call]): Unit = {
-    calls.foreach { call =>
+  override def run(builder: DiffGraphBuilder): Unit = {
+    cpg.call.foreach { call =>
       try {
         call.dispatchType match {
           case DispatchTypes.STATIC_DISPATCH | DispatchTypes.INLINED =>

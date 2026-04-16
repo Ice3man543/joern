@@ -6,6 +6,8 @@ import io.joern.dataflowengineoss.testfixtures.{SemanticCpgTestFixture, Semantic
 import io.joern.gosrc2cpg.datastructures.GoGlobal
 import io.joern.gosrc2cpg.model.GoModHelper
 import io.joern.gosrc2cpg.{Config, GoSrc2Cpg}
+import io.joern.x2cpg.frontendspecific.gosrc2cpg as goPostProcessing
+import io.joern.x2cpg.passes.frontend.XTypeRecoveryConfig
 import io.joern.x2cpg.testfixtures.{Code2CpgFixture, DefaultTestCpg}
 import io.shiftleft.codepropertygraph.generated.Cpg
 import io.shiftleft.semanticcpg.language.{ICallResolver, NoResolve}
@@ -19,6 +21,7 @@ class DefaultTestCpgWithGo(val fileSuffix: String) extends DefaultTestCpg with S
   private var goSrc2Cpg: Option[GoSrc2Cpg] = None
   override protected def applyPasses(): Unit = {
     super.applyPasses()
+    goPostProcessing.postProcessingPasses(this, XTypeRecoveryConfig()).foreach(_.createAndApply())
     applyOssDataFlow()
   }
 

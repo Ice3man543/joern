@@ -1,0 +1,7 @@
+**/target/
+.git/
+.bsp/
+.idea/
+workspace/
+*.class
+*.log

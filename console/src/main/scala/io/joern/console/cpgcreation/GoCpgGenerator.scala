@@ -1,6 +1,9 @@
 package io.joern.console.cpgcreation
 
 import io.joern.console.FrontendConfig
+import io.joern.x2cpg.frontendspecific.gosrc2cpg
+import io.joern.x2cpg.passes.frontend.XTypeRecoveryConfig
+import io.shiftleft.codepropertygraph.generated.Cpg
 
 import java.nio.file.Path
 import scala.util.Try
@@ -10,6 +13,7 @@ import scala.util.Try
 case class GoCpgGenerator(config: FrontendConfig, rootPath: Path) extends CpgGenerator {
   private lazy val goSrc2CpgCommand: Path =
     if (isWin) rootPath.resolve("gosrc2cpg.bat") else rootPath.resolve("gosrc2cpg")
+  private lazy val typeRecoveryConfig = XTypeRecoveryConfig.parse(config.cmdLineParams.toSeq)
 
   /** Generate a CPG for the given input path. Returns the output path, or None, if no CPG was generated.
     */
@@ -44,5 +48,10 @@ case class GoCpgGenerator(config: FrontendConfig, rootPath: Path) extends CpgGen
 
   override def isAvailable: Boolean = go2CpgAvailable() || goSrc2CpgAvailable()
 
-  override def isJvmBased = false
+  override def applyPostProcessingPasses(cpg: Cpg): Cpg = {
+    gosrc2cpg.postProcessingPasses(cpg, typeRecoveryConfig).foreach(_.createAndApply())
+    cpg
+  }
+
+  override def isJvmBased = true
 }

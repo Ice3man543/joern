@@ -66,6 +66,7 @@ trait AstForTypeDeclCreator(implicit withSchemaValidation: ValidationMode) { thi
               astForNode(xnode),
               goGlobal
                 .getStructTypeMemberType(nameSpace, fieldIdentifier)
+                .orElse(GoStdlibTypeMap.resolveStructMember(nameSpace, fieldIdentifier))
                 .getOrElse(
                   s"$nameSpace.$fieldIdentifier${Defines.dot}${Defines.FieldAccess}${Defines.dot}${XDefines.Unknown}"
                 )
@@ -82,6 +83,7 @@ trait AstForTypeDeclCreator(implicit withSchemaValidation: ValidationMode) { thi
     val receiverTypeFullName = getTypeFullNameFromAstNode(identifierAsts)
     val fieldTypeFullName = goGlobal
       .getStructTypeMemberType(receiverTypeFullName, fieldIdentifier)
+      .orElse(GoStdlibTypeMap.resolveStructMember(receiverTypeFullName, fieldIdentifier))
       .getOrElse(
         s"$receiverTypeFullName${Defines.dot}$fieldIdentifier${Defines.dot}${Defines.FieldAccess}${Defines.dot}${XDefines.Unknown}"
       )
