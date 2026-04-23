@@ -186,7 +186,8 @@ class TypeRecoveryPassTests extends DataFlowCodeToCpgSuite {
     "resolve a 'createTable' call indirectly from 'foo.d' field access correctly" in {
       val List(d) = cpg.file.name(".*Bar.*").ast.isCall.name("createTable").l
       d.methodFullName shouldBe "flask_sqlalchemy:SQLAlchemy:createTable"
-      d.dynamicTypeHintFullName shouldBe Seq()
+      // JavaScriptCanonicalCallHintPass appends the canonical dotted form for external packages.
+      d.dynamicTypeHintFullName shouldBe Seq("flask_sqlalchemy.createTable")
       d.callee(NoResolve).isExternal.headOption shouldBe Option(true)
     }
 
@@ -198,7 +199,7 @@ class TypeRecoveryPassTests extends DataFlowCodeToCpgSuite {
         .name("deleteTable")
         .l
       d.methodFullName shouldBe "flask_sqlalchemy:SQLAlchemy:deleteTable"
-      d.dynamicTypeHintFullName shouldBe empty
+      d.dynamicTypeHintFullName shouldBe Seq("flask_sqlalchemy.deleteTable")
       d.callee(NoResolve).isExternal.headOption shouldBe Option(true)
     }
 

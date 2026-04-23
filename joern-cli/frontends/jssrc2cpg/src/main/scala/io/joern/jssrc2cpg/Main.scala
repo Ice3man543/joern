@@ -11,6 +11,7 @@ import java.nio.file.Paths
 
 final case class Config(
   tsTypes: Boolean = true,
+  useDefaultExcludes: Boolean = true,
   override val genericConfig: X2CpgConfig.GenericConfig = X2CpgConfig.GenericConfig(),
   override val typeRecoveryParserConfig: TypeRecoveryParserConfig.Config = TypeRecoveryParserConfig.Config()
 ) extends X2CpgConfig[Config]
@@ -22,6 +23,10 @@ final case class Config(
 
   def withTsTypes(value: Boolean): Config = {
     copy(tsTypes = value)
+  }
+
+  def withUseDefaultExcludes(value: Boolean): Config = {
+    copy(useDefaultExcludes = value)
   }
 
 }
@@ -38,6 +43,12 @@ object Frontend {
         .hidden()
         .action((_, c) => c.withTsTypes(false))
         .text("disable generation of types via Typescript"),
+      opt[Unit]("no-default-excludes")
+        .action((_, c) => c.withUseDefaultExcludes(false))
+        .text(
+          "disable the built-in default file/path exclusions " +
+            "(node_modules, dist, build, coverage, .next, *.min.js, minified-bundle heuristic, ...)"
+        ),
       XTypeRecoveryConfig.parserOptionsForParserConfig
     )
   }

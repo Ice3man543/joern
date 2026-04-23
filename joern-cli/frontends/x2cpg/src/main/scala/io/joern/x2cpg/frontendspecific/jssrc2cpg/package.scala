@@ -11,6 +11,11 @@ package object jssrc2cpg {
     List(new JavaScriptInheritanceNamePass(cpg), new ConstClosurePass(cpg), new JavaScriptImportResolverPass(cpg))
       ++
         new JavaScriptTypeRecoveryPassGenerator(cpg, typeRecoveryConfig).generate() ++
-        List(new JavaScriptTypeHintCallLinker(cpg), ObjectPropertyCallLinker(cpg), new NaiveCallLinker(cpg))
+        List(
+          new JavaScriptTypeHintCallLinker(cpg),
+          new JavaScriptCanonicalCallHintPass(cpg),
+          ObjectPropertyCallLinker(cpg),
+          new NaiveCallLinker(cpg)
+        )
   }
 }

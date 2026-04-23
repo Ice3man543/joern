@@ -146,6 +146,22 @@ class OperatorExtensionTests extends AnyWordSpec with Matchers {
       source.name shouldBe "x"
     }
 
+    "tolerate malformed assignments with more than two arguments by returning the last argument" in {
+      val cpg = MockCpg()
+        .withMethod(methodName)
+        .withCallInMethod(methodName, Operators.assignment)
+        .withIdentifierArgument(Operators.assignment, "x", 1)
+        .withIdentifierArgument(Operators.assignment, "y", 2)
+        .withIdentifierArgument(Operators.assignment, "z", 3)
+        .cpg
+
+      noException should be thrownBy cpg.assignment.source.l
+      val List(source) = cpg.assignment.source.isIdentifier.l
+      source.name shouldBe "z"
+      val List(target) = cpg.assignment.target.isIdentifier.l
+      target.name shouldBe "x"
+    }
+
   }
 
   "Assignment Target" should {

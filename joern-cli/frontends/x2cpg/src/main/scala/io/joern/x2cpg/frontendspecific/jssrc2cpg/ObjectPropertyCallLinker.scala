@@ -29,6 +29,7 @@ class ObjectPropertyCallLinker(cpg: Cpg) extends CpgPass(cpg) {
       .groupBy(_._1)
       .map { case (k, vs) => k -> vs.map(_._2) }
     cpg.assignment
+      .filter(_.argument.size == 2)
       .and(_.source.isMethodRef, _.target.isCall.fieldAccess)
       .map { a => a.target.asInstanceOf[Call] -> a.source.asInstanceOf[MethodRef].referencedMethod.fullName }
       .foreach { (functionTarget, calleeFn) =>

@@ -224,7 +224,9 @@ class SimpleAstCreationPassTests extends JsSrc2CpgSuite {
     }
 
     "have correct structure for array literal with too many values" in {
-      val cpg               = code(s"var x = [1, 2, ${("n" * 1500).mkString(",")}]")
+      val cpg = code(s"var x = [1, 2, ${("n" * 1500).mkString(",")}]")
+        .withConfig(Config().withUseDefaultExcludes(false))
+
       val List(methodBlock) = cpg.method.nameExact(":program").astChildren.isBlock.l
 
       val List(xAssignment) = methodBlock.astChildren.isCall.l
